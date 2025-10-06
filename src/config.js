@@ -10,31 +10,45 @@
 //   return API_BASE_URL.endsWith("/") ? API_BASE_URL : `${API_BASE_URL}/`;
 // };
 
-
 import axios from "axios";
 import Cookies from "js-cookie";
 
-// Set API base URL depending on environment
 export const API_BASE_URL =
   process.env.NODE_ENV === "production"
-    ? "https://e-commerce-backend-axvr.onrender.com" // Your deployed backend
+    ? "https://e-commerce-backend-axvr.onrender.com"
     : "http://localhost:8000";
 
-// Ensure trailing slash
-export const getApiUrl = () => (API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`);
+export const getApiUrl = () =>
+  API_BASE_URL.endsWith("/") ? API_BASE_URL : `${API_BASE_URL}/`;
 
-// ---------------- Session Check ----------------
+// Login request
+export const login = async (data) => {
+  try {
+    const response = await axios.post(`${getApiUrl()}api/login/`, data, {
+      withCredentials: true, // include session cookie
+      headers: {
+        "X-CSRFToken": Cookies.get("csrftoken") || "",
+      },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Login failed:", err.response?.data || err);
+    return null;
+  }
+};
+
+// Session check
 export const checkSession = async () => {
   try {
     const response = await axios.get(`${getApiUrl()}api/session/`, {
-      withCredentials: true,  // important to send session cookie
+      withCredentials: true,
       headers: {
-        "X-CSRFToken": Cookies.get("csrftoken"), // optional, if CSRF used
+        "X-CSRFToken": Cookies.get("csrftoken") || "",
       },
     });
-    return response.data; // returns { is_authenticated, username, is_admin }
+    return response.data;
   } catch (err) {
-    console.error("Session check failed:", err);
+    console.error("Session check failed:", err.response?.data || err);
     return null;
   }
 };
