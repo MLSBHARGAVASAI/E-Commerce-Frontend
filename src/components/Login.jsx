@@ -36,41 +36,34 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function Auth({ setAuth }) {
-  const [isLogin, setIsLogin] = useState(true);
-  const [loginData, setLoginData] = useState({ email: "", password: "" });
-  const [registerData, setRegisterData] = useState({
-    first_name: "",
-    last_name: "",
-    username: "",
-    email: "",
-    password: "",
-  });
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+// ---------------- API BASE ----------------
+const API_BASE =
+  import.meta.env.MODE === "production"
+    ? "https://e-commerce-backend-axvr.onrender.com/api/"
+    : "/api/";
 
-  const API_BASE = "/api/"; // use Vite proxy to avoid cross-site cookies
-
-  // ---------------- Axios defaults ----------------
-  axios.defaults.withCredentials = true;
-
-  // ---------------- CSRF Helper ----------------
-  const getCookie = (name) => {
-    const cookies = document.cookie.split(";").map(c => c.trim());
-    for (let cookie of cookies) {
-      if (cookie.startsWith(name + "=")) {
-        return decodeURIComponent(cookie.substring(name.length + 1));
-      }
+// ---------------- CSRF Helper ----------------
+const getCookie = (name) => {
+  const cookies = document.cookie.split(";").map(c => c.trim());
+  for (let cookie of cookies) {
+    if (cookie.startsWith(name + "=")) {
+      return decodeURIComponent(cookie.substring(name.length + 1));
     }
-    return null;
-  };
+  }
+  return null;
+};
 
-  // Attach CSRF token to all Axios requests
-  axios.interceptors.request.use((config) => {
-    const token = getCookie("csrftoken");
-    if (token) config.headers["X-CSRFToken"] = token;
-    return config;
-  });
+// Attach CSRF token to all Axios requests
+axios.defaults.withCredentials = true;
+axios.interceptors.request.use((config) => {
+  const token = getCookie("csrftoken");
+  if (token) config.headers["X-CSRFToken"] = token;
+  return config;
+});
+
+export default function Login({ setAuth }) {
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
 
   // ---------------- Persist login on refresh ----------------
   useEffect(() => {
@@ -94,8 +87,8 @@ export default function Auth({ setAuth }) {
       if (res.data.success) {
         setAuth(true);
         setLoginData({ email: "", password: "" });
-        // refresh session status immediately after login
-        try { await axios.get(API_BASE + 'session/'); } catch {}
+        // refresh session status immediately
+        try { await axios.get(API_BASE + "session/"); } catch {}
       } else {
         setError(res.data.error || "Invalid credentials.");
       }
@@ -104,133 +97,30 @@ export default function Auth({ setAuth }) {
     }
   };
 
-  // ---------------- REGISTER ----------------
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    try {
-      const res = await axios.post(API_BASE + "register/", registerData);
-      if (res.data.success) {
-        setSuccess("Registration successful! You can now log in.");
-        setRegisterData({
-          first_name: "",
-          last_name: "",
-          username: "",
-          email: "",
-          password: "",
-        });
-        setIsLogin(true);
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || "Registration failed.");
-    }
-  };
-
-  // ---------------- UI ----------------
   return (
     <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
       <div className="card p-4 shadow mx-3" style={{ width: '100%', maxWidth: 400, borderRadius: 12 }}>
-        {/* Toggle Buttons */}
-        <div className="d-flex mb-3">
-          <button
-            className={`btn w-50 ${isLogin ? "btn-primary" : "btn-outline-primary"}`}
-            onClick={() => {
-              setIsLogin(true);
-              setError("");
-              setSuccess("");
-            }}
-          >
-            Login
-          </button>
-          <button
-            className={`btn w-50 ${!isLogin ? "btn-primary" : "btn-outline-primary"}`}
-            onClick={() => {
-              setIsLogin(false);
-              setError("");
-              setSuccess("");
-            }}
-          >
-            Register
-          </button>
-        </div>
-
-        {/* LOGIN FORM */}
-        {isLogin ? (
-          <form onSubmit={handleLogin}>
-            <input
-              type="email"
-              className="form-control mb-3"
-              placeholder="Email"
-              value={loginData.email}
-              onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-              required
-            />
-            <input
-              type="password"
-              className="form-control mb-3"
-              placeholder="Password"
-              value={loginData.password}
-              onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-              required
-            />
-            {error && <div className="text-danger mb-2">{error}</div>}
-            <button className="btn btn-primary w-100" type="submit">Login</button>
-          </form>
-        ) : (
-          // REGISTER FORM
-          <form onSubmit={handleRegister}>
-            <div className="row g-2 mb-3">
-              <div className="col-12 col-sm-6">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="First Name"
-                  value={registerData.first_name}
-                  onChange={(e) => setRegisterData({ ...registerData, first_name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="col-12 col-sm-6">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Last Name"
-                  value={registerData.last_name}
-                  onChange={(e) => setRegisterData({ ...registerData, last_name: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-            <input
-              type="text"
-              className="form-control mb-3"
-              placeholder="Username"
-              value={registerData.username}
-              onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
-              required
-            />
-            <input
-              type="email"
-              className="form-control mb-3"
-              placeholder="Email"
-              value={registerData.email}
-              onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-              required
-            />
-            <input
-              type="password"
-              className="form-control mb-3"
-              placeholder="Password"
-              value={registerData.password}
-              onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-              required
-            />
-            {error && <div className="text-danger mb-2">{error}</div>}
-            {success && <div className="text-success mb-2">{success}</div>}
-            <button className="btn btn-primary w-100" type="submit">Register</button>
-          </form>
-        )}
+        <form onSubmit={handleLogin}>
+          <h3 className="mb-3 text-center">Login</h3>
+          <input
+            type="email"
+            className="form-control mb-3"
+            placeholder="Email"
+            value={loginData.email}
+            onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+            required
+          />
+          <input
+            type="password"
+            className="form-control mb-3"
+            placeholder="Password"
+            value={loginData.password}
+            onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+            required
+          />
+          {error && <div className="text-danger mb-2">{error}</div>}
+          <button className="btn btn-primary w-100" type="submit">Login</button>
+        </form>
       </div>
     </div>
   );
