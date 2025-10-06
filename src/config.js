@@ -13,42 +13,59 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-export const API_BASE_URL =
+// ---------------- API Base ----------------
+export const API_BASE =
   process.env.NODE_ENV === "production"
-    ? "https://e-commerce-backend-axvr.onrender.com"
-    : "http://localhost:8000";
+    ? "https://e-commerce-backend-axvr.onrender.com/api/"
+    : "http://localhost:8000/api/";
 
-export const getApiUrl = () =>
-  API_BASE_URL.endsWith("/") ? API_BASE_URL : `${API_BASE_URL}/`;
+// ---------------- Axios default ----------------
+axios.defaults.withCredentials = true; // send cookies
 
-// Login request
-export const login = async (data) => {
+// ---------------- CSRF Helper ----------------
+export const getCsrfToken = () => {
+  const cookies = document.cookie.split(";").map(c => c.trim());
+  for (let cookie of cookies) {
+    if (cookie.startsWith("csrftoken=")) {
+      return decodeURIComponent(cookie.substring("csrftoken=".length));
+    }
+  }
+  return null;
+};
+
+// ---------------- Session Check ----------------
+export const checkSession = async () => {
   try {
-    const response = await axios.post(`${getApiUrl()}api/login/`, data, {
-      withCredentials: true, // include session cookie
-      headers: {
-        "X-CSRFToken": Cookies.get("csrftoken") || "",
-      },
+    const res = await axios.get(`${API_BASE}session/`, {
+      headers: { "X-CSRFToken": getCsrfToken() },
     });
-    return response.data;
+    return res.data; // { is_authenticated, username, is_admin }
   } catch (err) {
-    console.error("Login failed:", err.response?.data || err);
+    console.error("Session check failed:", err);
     return null;
   }
 };
 
-// Session check
-export const checkSession = async () => {
+// ---------------- Login ----------------
+export const loginUser = async (loginData) => {
   try {
-    const response = await axios.get(`${getApiUrl()}api/session/`, {
-      withCredentials: true,
-      headers: {
-        "X-CSRFToken": Cookies.get("csrftoken") || "",
-      },
+    const res = await axios.post(`${API_BASE}login/`, loginData, {
+      headers: { "X-CSRFToken": getCsrfToken() },
     });
-    return response.data;
+    return res.data; // { success: true/false, message/error }
   } catch (err) {
-    console.error("Session check failed:", err.response?.data || err);
-    return null;
+    return { success: false, error: err.response?.data?.error || "Login failed" };
+  }
+};
+
+// ---------------- Register ----------------
+export const registerUser = async (registerData) => {
+  try {
+    const res = await axios.post(`${API_BASE}register/`, registerData, {
+      headers: { "X-CSRFToken": getCsrfToken() },
+    });
+    return res.data;
+  } catch (err) {
+    return { success: false, error: err.response?.data?.error || "Registration failed" };
   }
 };
