@@ -20,24 +20,22 @@ export const API_BASE =
     : "http://localhost:8000/api/";
 
 // ---------------- Axios default ----------------
-axios.defaults.withCredentials = true; // send cookies
+axios.defaults.withCredentials = true; // include session cookies
 
 // ---------------- CSRF Helper ----------------
 export const getCsrfToken = () => {
-  const cookies = document.cookie.split(";").map(c => c.trim());
-  for (let cookie of cookies) {
-    if (cookie.startsWith("csrftoken=")) {
-      return decodeURIComponent(cookie.substring("csrftoken=".length));
-    }
-  }
-  return null;
+  const cookie = Cookies.get("csrftoken");
+  return cookie || null;
 };
 
 // ---------------- Session Check ----------------
 export const checkSession = async () => {
   try {
     const res = await axios.get(`${API_BASE}session/`, {
-      headers: { "X-CSRFToken": getCsrfToken() },
+      headers: {
+        "X-CSRFToken": getCsrfToken(),
+        "Content-Type": "application/json",
+      },
     });
     return res.data; // { is_authenticated, username, is_admin }
   } catch (err) {
@@ -49,12 +47,22 @@ export const checkSession = async () => {
 // ---------------- Login ----------------
 export const loginUser = async (loginData) => {
   try {
+    console.log("POSTing to:", `${API_BASE}login/`);
     const res = await axios.post(`${API_BASE}login/`, loginData, {
-      headers: { "X-CSRFToken": getCsrfToken() },
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrfToken(),
+      },
+      withCredentials: true,
     });
-    return res.data; // { success: true/false, message/error }
+    console.log("Login response:", res.data);
+    return res.data;
   } catch (err) {
-    return { success: false, error: err.response?.data?.error || "Login failed" };
+    console.error("Login error:", err);
+    return {
+      success: false,
+      error: err.response?.data?.error || "Login failed",
+    };
   }
 };
 
@@ -62,10 +70,18 @@ export const loginUser = async (loginData) => {
 export const registerUser = async (registerData) => {
   try {
     const res = await axios.post(`${API_BASE}register/`, registerData, {
-      headers: { "X-CSRFToken": getCsrfToken() },
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrfToken(),
+      },
+      withCredentials: true,
     });
     return res.data;
   } catch (err) {
-    return { success: false, error: err.response?.data?.error || "Registration failed" };
+    console.error("Registration error:", err);
+    return {
+      success: false,
+      error: err.response?.data?.error || "Registration failed",
+    };
   }
 };
