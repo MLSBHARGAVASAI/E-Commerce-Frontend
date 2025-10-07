@@ -19,8 +19,17 @@ export const API_BASE =
     ? "https://e-commerce-backend-axvr.onrender.com/api/"
     : "http://localhost:8000/api/";
 
-// ---------------- Axios default ----------------
-axios.defaults.withCredentials = true; // include session cookies
+// ---------------- Axios instance ----------------
+// Use a dedicated axios instance configured to always talk to the backend origin
+export const api = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true,
+  headers: { "Content-Type": "application/json" },
+});
+
+// Make sure axios uses Django's CSRF cookie/header names
+api.defaults.xsrfCookieName = "csrftoken";
+api.defaults.xsrfHeaderName = "X-CSRFToken";
 
 // ---------------- CSRF Helper ----------------
 export const getCsrfToken = () => {
@@ -28,16 +37,20 @@ export const getCsrfToken = () => {
   return cookie || null;
 };
 
+// Attach CSRF header for unsafe methods when cookie is present
+api.interceptors.request.use((config) => {
+  const token = getCsrfToken();
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers["X-CSRFToken"] = token;
+  }
+  return config;
+});
+
 // ---------------- Session Check ----------------
 export const checkSession = async () => {
   try {
-    const res = await axios.get(`${API_BASE}session/`, {
-      headers: {
-        "X-CSRFToken": getCsrfToken(),
-        "Content-Type": "application/json",
-      },
-      withCredentials: true,
-    });
+    const res = await api.get("session/");
     return res.data; // { is_authenticated, username, is_admin }
   } catch (err) {
     console.error("Session check failed:", err);
@@ -48,13 +61,7 @@ export const checkSession = async () => {
 // ---------------- Login ----------------
 export const loginUser = async (loginData) => {
   try {
-    const res = await axios.post(`${API_BASE}login/`, loginData, {
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": getCsrfToken(),
-      },
-      withCredentials: true,
-    });
+    const res = await api.post("login/", loginData);
     return res.data;
   } catch (err) {
     console.error("Login error:", err.response || err);
@@ -68,13 +75,7 @@ export const loginUser = async (loginData) => {
 // ---------------- Register ----------------
 export const registerUser = async (registerData) => {
   try {
-    const res = await axios.post(`${API_BASE}register/`, registerData, {
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": getCsrfToken(),
-      },
-      withCredentials: true,
-    });
+    const res = await api.post("register/", registerData);
     return res.data;
   } catch (err) {
     console.error("Registration error:", err.response || err);
