@@ -36,18 +36,18 @@ export const checkSession = async () => {
         "X-CSRFToken": getCsrfToken(),
         "Content-Type": "application/json",
       },
+      withCredentials: true,
     });
     return res.data; // { is_authenticated, username, is_admin }
   } catch (err) {
     console.error("Session check failed:", err);
-    return null;
+    return { is_authenticated: false, is_admin: false, username: null };
   }
 };
 
 // ---------------- Login ----------------
 export const loginUser = async (loginData) => {
   try {
-    console.log("POSTing to:", `${API_BASE}login/`);
     const res = await axios.post(`${API_BASE}login/`, loginData, {
       headers: {
         "Content-Type": "application/json",
@@ -55,10 +55,9 @@ export const loginUser = async (loginData) => {
       },
       withCredentials: true,
     });
-    console.log("Login response:", res.data);
     return res.data;
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("Login error:", err.response || err);
     return {
       success: false,
       error: err.response?.data?.error || "Login failed",
@@ -78,7 +77,7 @@ export const registerUser = async (registerData) => {
     });
     return res.data;
   } catch (err) {
-    console.error("Registration error:", err);
+    console.error("Registration error:", err.response || err);
     return {
       success: false,
       error: err.response?.data?.error || "Registration failed",
