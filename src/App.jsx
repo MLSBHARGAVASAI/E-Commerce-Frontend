@@ -18,8 +18,11 @@ export default function App() {
   const [cartCount, setCartCount] = useState(0); // server cart count
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const API_BASE = "/api/"; // use Vite proxy to keep same-site cookies
-
+  //const API_BASE = "/api/"; // use Vite proxy to keep same-site cookies
+  const API_BASE =
+  import.meta.env.MODE === "production"
+    ? "https://e-commerce-backend-axvr.onrender.com/api/"
+    : "http://localhost:8000/api/";
   axios.defaults.withCredentials = true;
   // ensure CSRF header is sent on all requests
   axios.interceptors.request.use((config) => {
