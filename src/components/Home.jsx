@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AdminUsers from "./AdminUsers";
-import axios from "axios";
+import { api } from "./config";
 
 export default function Home({ addToCart, isAdmin }) {
   const [products, setProducts] = useState([]);
@@ -18,12 +18,12 @@ export default function Home({ addToCart, isAdmin }) {
 
   const [stats, setStats] = useState(null);
 
-  const API_URL = "/api/products/";
+  const API_URL = "products/";
 
   // Fetch products
   const fetchProducts = () => {
     setLoading(true);
-    axios
+    api
       .get(API_URL)
       .then((res) => {
         setProducts(res.data);
@@ -54,7 +54,7 @@ export default function Home({ addToCart, isAdmin }) {
   // Load admin stats
   useEffect(() => {
     if (!isAdmin) return;
-    axios.get('/api/admin/stats/').then(res => setStats(res.data)).catch(()=>{})
+    api.get('admin/stats/').then(res => setStats(res.data)).catch(()=>{})
   }, [isAdmin])
 
   // Add new product
@@ -63,7 +63,7 @@ export default function Home({ addToCart, isAdmin }) {
       alert("Name and Price are required");
       return;
     }
-    axios
+    api
       .post(API_URL, newProduct)
       .then(() => {
         setNewProduct({ name: "", description: "", price: "" });
@@ -74,7 +74,7 @@ export default function Home({ addToCart, isAdmin }) {
 
   // Delete product
   const deleteProduct = (id) => {
-    axios
+    api
       .delete(`${API_URL}${id}/`)
       .then(() => fetchProducts())
       .catch((err) => console.error("Error deleting product:", err));
@@ -94,7 +94,7 @@ export default function Home({ addToCart, isAdmin }) {
 
   // Save edited product
   const saveEdit = (id) => {
-    axios
+    api
       .put(`${API_URL}${id}/`, editingData)
       .then(() => {
         setEditingProduct(null);

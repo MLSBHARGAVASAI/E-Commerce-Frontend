@@ -1,33 +1,12 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api, getCsrfToken } from "./config";
 
 export default function Cart({ isAuth, clearCart }) {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const API_BASE = "/api/"; // use Vite proxy to avoid cross-site
-
-  // Set axios to always send cookies
-  axios.defaults.withCredentials = true;
-  axios.interceptors.request.use((config) => {
-    // ensure CSRF header is present
-    const token = getCSRFToken();
-    if (token) config.headers = { ...(config.headers || {}), 'X-CSRFToken': token };
-    return config;
-  });
-
-  // Get CSRF token from cookie
-  const getCSRFToken = () => {
-    const name = "csrftoken";
-    const cookies = document.cookie.split(";").map(c => c.trim());
-    for (let cookie of cookies) {
-      if (cookie.startsWith(name + "=")) {
-        return decodeURIComponent(cookie.substring(name.length + 1));
-      }
-    }
-    return null;
-  };
+  // Use centralized axios instance and CSRF helper
 
   // Fetch cart from API
   const fetchCart = async () => {
@@ -35,7 +14,7 @@ export default function Cart({ isAuth, clearCart }) {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get(API_BASE + "cart/");
+      const res = await api.get("cart/");
       setCart(res.data);
     } catch (err) {
       if (err.response?.status === 403 || err.response?.status === 401) {
@@ -51,10 +30,10 @@ export default function Cart({ isAuth, clearCart }) {
   // Update item quantity
   const updateQty = async (itemId, nextQty) => {
     try {
-      const csrfToken = getCSRFToken();
-      await axios.patch(API_BASE + "cart/", { item_id: itemId, quantity: nextQty }, { headers: { "X-CSRFToken": csrfToken } });
+      const csrfToken = getCsrfToken();
+      await api.patch("cart/", { item_id: itemId, quantity: nextQty }, { headers: { "X-CSRFToken": csrfToken } });
       // refresh
-      const res = await axios.get(API_BASE + "cart/");
+      const res = await api.get("cart/");
       setCart(res.data);
     } catch (e) {
       setError("Failed to update quantity");
@@ -69,8 +48,8 @@ export default function Cart({ isAuth, clearCart }) {
   const handleClear = async () => {
     setError("");
     try {
-      const csrfToken = getCSRFToken();
-      await axios.delete(API_BASE + "cart/", {
+      const csrfToken = getCsrfToken();
+      await api.delete("cart/", {
         headers: { "X-CSRFToken": csrfToken },
       });
       setCart({ ...cart, items: [], total: 0 });

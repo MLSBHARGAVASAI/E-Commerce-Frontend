@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import { api } from './config'
 
 export default function Profile(){
   const [user, setUser] = useState(null)
@@ -10,7 +10,7 @@ export default function Profile(){
 
   const load = async () => {
     try{
-      const res = await axios.get('/api/me/')
+      const res = await api.get('me/')
       if(res.data.success){
         setUser(res.data.user)
         setForm({
@@ -27,12 +27,12 @@ export default function Profile(){
 
   const save = async () => {
     setMsg(''); setErr('')
-    try{ await axios.patch('/api/me/', form); setMsg('Profile updated.') }catch(e){ setErr('Update failed') }
+    try{ await api.patch('me/', form); setMsg('Profile updated.') }catch(e){ setErr('Update failed') }
   }
 
   const changePassword = async () => {
     setMsg(''); setErr('')
-    try{ await axios.post('/api/change-password/', pw); setMsg('Password changed. Login again if required.') }catch(e){ setErr(e.response?.data?.error || 'Password change failed') }
+    try{ await api.post('change-password/', pw); setMsg('Password changed. Login again if required.') }catch(e){ setErr(e.response?.data?.error || 'Password change failed') }
   }
 
   if(!user) return <div>{err || 'Loading profile…'}</div>

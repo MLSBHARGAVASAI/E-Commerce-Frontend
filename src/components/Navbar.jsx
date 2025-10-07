@@ -1,13 +1,13 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { api } from './config'
 
 export default function Navbar({ setAuth, cartCount, onToggleSidebar, sidebarOpen }){
   const nav = useNavigate()
 
   async function handleLogout(){
     try{
-      await axios.post('/api/logout/', {}, { withCredentials: true })
+      await api.post('logout/', {})
     }catch(e){
       // ignore
     }

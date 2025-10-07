@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import { api } from './config'
 
 export default function AdminUsers(){
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [form, setForm] = useState({ username: '', email: '', first_name: '', last_name: '', password: '' })
-  const API = '/api/admin/users/'
+  const API = 'admin/users/'
 
-  axios.defaults.withCredentials = true
+  // credentials/CSRF are configured on the shared axios instance
 
   const fetchUsers = async () => {
     setLoading(true)
     setError('')
     try{
-      const res = await axios.get(API)
+      const res = await api.get(API)
       setUsers(res.data.users || [])
     }catch(e){
       setError('Failed to load users (admin only)')
@@ -26,7 +26,7 @@ export default function AdminUsers(){
   const addUser = async () => {
     setError('')
     try{
-      await axios.post(API, form)
+      await api.post(API, form)
       setForm({ username: '', email: '', first_name: '', last_name: '', password: '' })
       fetchUsers()
     }catch(e){ setError(e.response?.data?.error || 'Failed to create user') }
@@ -35,14 +35,14 @@ export default function AdminUsers(){
   const deleteUser = async (id) => {
     setError('')
     try{
-      await axios.delete(`/api/admin/users/${id}/`)
+      await api.delete(`admin/users/${id}/`)
       fetchUsers()
     }catch(e){ setError(e.response?.data?.error || 'Delete failed') }
   }
 
   const updateUser = async (u, changes) => {
     try{
-      await axios.patch(`/api/admin/users/${u.id}/`, changes)
+      await api.patch(`admin/users/${u.id}/`, changes)
       fetchUsers()
     }catch(e){ setError(e.response?.data?.error || 'Update failed') }
   }

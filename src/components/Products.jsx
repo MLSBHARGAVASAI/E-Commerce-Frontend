@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "./config";
 
 export default function Products({ addToCart, isAdmin }) {
   const [products, setProducts] = useState([]);
@@ -9,8 +9,8 @@ export default function Products({ addToCart, isAdmin }) {
   const [editData, setEditData] = useState({ name: "", description: "", price: "" });
 
   useEffect(() => {
-    axios
-      .get("/api/products/") // via Vite proxy
+    api
+      .get("products/")
       .then((response) => {
         console.log("API Response:", response.data); // 👈 Debug log
         setProducts(response.data);
@@ -35,9 +35,9 @@ export default function Products({ addToCart, isAdmin }) {
 
   const saveEdit = async (id) => {
     try {
-      await axios.put(`/api/products/${id}/`, editData);
+      await api.put(`products/${id}/`, editData);
       // refresh
-      const res = await axios.get("/api/products/");
+      const res = await api.get("products/");
       setProducts(res.data);
       cancelEdit();
     } catch (e) {
@@ -48,7 +48,7 @@ export default function Products({ addToCart, isAdmin }) {
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
     try {
-      await axios.delete(`/api/products/${id}/`);
+      await api.delete(`products/${id}/`);
       setProducts((prev) => prev.filter((p) => p.id !== id));
     } catch (e) {
       alert(e.response?.data?.error || "Delete failed (admin only)");
