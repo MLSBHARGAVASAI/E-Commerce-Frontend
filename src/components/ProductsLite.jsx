@@ -8,7 +8,7 @@ export default function ProductsLite(){
 
   useEffect(() => {
     let mounted = true
-    api.get('/products/')
+    api.get('products/')
       .then(res => { if(mounted){ setProducts(res.data); setLoading(false) } })
       .catch(() => { if(mounted){ setErr('Failed to load products'); setLoading(false) } })
     return () => { mounted = false }
