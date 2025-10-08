@@ -39,10 +39,13 @@ export const getCsrfToken = () => {
 
 // Attach CSRF header for unsafe methods when cookie is present
 api.interceptors.request.use((config) => {
-  const token = getCsrfToken();
-  if (token) {
-    config.headers = config.headers || {};
-    config.headers["X-CSRFToken"] = token;
+  const method = (config.method || 'get').toLowerCase();
+  if (["post", "put", "patch", "delete"].includes(method)) {
+    const token = getCsrfToken();
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers["X-CSRFToken"] = token;
+    }
   }
   return config;
 });
