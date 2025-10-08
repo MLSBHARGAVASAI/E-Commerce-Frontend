@@ -156,7 +156,7 @@
 // }
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import axios from "axios";
+import { api } from "./components/config";
 
 // Components
 import Login from "./components/Login";
@@ -175,36 +175,14 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const API_BASE =
-    import.meta.env.MODE === "production"
-      ? "https://e-commerce-backend-axvr.onrender.com/api/"
-      : "http://localhost:8000/api/";
-
-  axios.defaults.withCredentials = true;
-
-  const getCSRFToken = () => {
-    const name = "csrftoken";
-    const cookies = document.cookie.split(";").map(c => c.trim());
-    for (let cookie of cookies) {
-      if (cookie.startsWith(name + "=")) {
-        return decodeURIComponent(cookie.substring(name.length + 1));
-      }
-    }
-    return null;
-  };
-
-  axios.interceptors.request.use((config) => {
-    const token = getCSRFToken();
-    if (token) config.headers = { ...(config.headers || {}), 'X-CSRFToken': token };
-    return config;
-  });
+  const API_BASE = undefined; // use api instance baseURL
 
   // ---------------- Cart Functions ----------------
   async function addToCart(product) {
     try {
-      const res = await axios.post(API_BASE + "cart/", { product_id: product.id, quantity: 1 });
+      const res = await api.post("cart/", { product_id: product.id, quantity: 1 });
       if (res.data?.success) {
-        const cartRes = await axios.get(API_BASE + "cart/");
+        const cartRes = await api.get("cart/");
         const count = cartRes.data.items.reduce((s, i) => s + i.quantity, 0);
         setCartCount(count);
       }
@@ -216,7 +194,7 @@ export default function App() {
 
   async function clearCart() {
     try {
-      await axios.delete(API_BASE + "cart/", { headers: { "X-CSRFToken": getCSRFToken() } });
+      await api.delete("cart/");
       setCartCount(0);
     } catch (e) {
       console.error("Failed to clear cart", e);
@@ -227,14 +205,14 @@ export default function App() {
   useEffect(() => {
     const loadSession = async () => {
       try {
-        const sess = await axios.get(API_BASE + "session/");
+        const sess = await api.get("session/");
         setAuth(sess.data.is_authenticated);
         setIsAdmin(sess.data.is_admin);
         if (!sess.data.is_authenticated) {
           setCartCount(0);
           return;
         }
-        const cartRes = await axios.get(API_BASE + "cart/");
+        const cartRes = await api.get("cart/");
         const count = cartRes.data.items.reduce((s, i) => s + i.quantity, 0);
         setCartCount(count);
       } catch (e) {

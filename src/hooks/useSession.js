@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSession, login } from '../components/config'
+import { checkSession, loginUser } from '../components/config'
 
 export function useSession() {
   const [session, setSession] = useState({
@@ -12,7 +12,7 @@ export function useSession() {
 
   const refresh = async () => {
     try {
-      const data = await getSession()
+      const data = await checkSession()
       setSession({ ...data, loading: false, error: '' })
     } catch (e) {
       setSession({ is_authenticated: false, is_admin: false, username: null, loading: false, error: 'Failed to check session' })
@@ -25,7 +25,7 @@ export function useSession() {
 
   const doLogin = async (credentials) => {
     try {
-      await login(credentials)
+      await loginUser(credentials)
       await refresh()
       return { success: true }
     } catch (e) {

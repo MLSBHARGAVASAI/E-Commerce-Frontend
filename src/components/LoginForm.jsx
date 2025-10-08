@@ -3,7 +3,7 @@ import { useSession } from '../hooks/useSession'
 
 export default function LoginForm(){
   const { session, doLogin } = useSession()
-  const [form, setForm] = useState({ username: '', password: '' })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
 
@@ -22,8 +22,8 @@ export default function LoginForm(){
     <form onSubmit={onSubmit} className="card p-3">
       {err && <div className="alert alert-danger">{err}</div>}
       {msg && <div className="alert alert-success">{msg}</div>}
-      <input className="form-control mb-2" placeholder="Email or Username" value={form.username} onChange={e=>setForm({...form, username:e.target.value})} />
-      <input className="form-control mb-3" type="password" placeholder="Password" value={form.password} onChange={e=>setForm({...form, password:e.target.value})} />
+      <input className="form-control mb-2" type="email" placeholder="Email" value={form.email} onChange={e=>setForm({...form, email:e.target.value})} required />
+      <input className="form-control mb-3" type="password" placeholder="Password" value={form.password} onChange={e=>setForm({...form, password:e.target.value})} required />
       <button className="btn btn-primary" type="submit">Login</button>
     </form>
   )
